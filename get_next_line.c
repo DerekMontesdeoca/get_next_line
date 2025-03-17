@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/02/13 12:06:36 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/17 21:05:16 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ static size_t	buf_nl(t_buf *buf, int fd)
 {
 	size_t	prev_start;
 
-	if (fd != buf->fd || (fd == buf->fd && buf->bytes_read <= 0))
+	if (fd != buf->fd || buf->bytes_read <= 0)
 	{
 		buf->bytes_read = 0;
 		buf->index = 0;
