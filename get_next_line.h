@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/12 11:02:58 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/02/13 12:07:33 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/18 05:23:30 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,13 @@
 # include <unistd.h>
 
 # ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 128
+#  define BUFFER_SIZE 512
 # endif
 
 typedef struct s_buf
 {
 	int		fd;
-	char	buf[BUFFER_SIZE];
+	char	*buf;
 	size_t	index;
 	ssize_t	bytes_read;
 	bool	nl_found;
@@ -37,6 +37,19 @@ typedef struct s_dynstr
 	size_t	len;
 }	t_dynstr;
 
+typedef enum e_buf_read_result
+{
+	BUF_READ_RESULT_OK,
+	BUF_READ_RESULT_DONE,
+	BUF_READ_RESULT_ERROR,
+}	t_buf_read_result;
+
 char	*get_next_line(int fd);
+
+void	*ft_realloc(void *ptr, size_t old_size, size_t new_size);
+
+void	dynstr_init(t_dynstr *str);
+
+bool	dynstr_ensure_size(t_dynstr *str, size_t ensured);
 
 #endif

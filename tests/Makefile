@@ -10,7 +10,7 @@ CMOCKA_LIB_DIR := $(CMOCKA_BUILD_DIR)/src
 CMOCKA := $(CMOCKA_LIB_DIR)/libcmocka.so
 
 NAME := test
-SRCS := test.c ../get_next_line.c
+SRCS := test.c ../get_next_line.c ../get_next_line_utils.c
 OBJS := $(SRCS:.c=.o)
 override CFLAGS += -g3 -fno-omit-frame-pointer -Wall -Wextra -Werror
 override CPPFLAGS += -I$(CMOCKA_INCLUDE) 
