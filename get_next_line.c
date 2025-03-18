@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/17 21:05:16 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/18 02:38:20 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ bool	dynstr_ensure_size(t_dynstr *str, size_t ensured)
 	size_t	new_size;
 	char	*new_data;
 
+	if (ensured <= str->size)
+		return (true);
 	new_size = str->size;
 	while (new_size < ensured)
 	{
@@ -60,57 +62,47 @@ bool	dynstr_ensure_size(t_dynstr *str, size_t ensured)
 	return (true);
 }
 
-static size_t	buf_nl(t_buf *buf, int fd)
-{
-	size_t	prev_start;
-
-	if (fd != buf->fd || buf->bytes_read <= 0)
-	{
-		buf->bytes_read = 0;
-		buf->index = 0;
-		buf->fd = fd;
-	}
-	if (buf->index >= (size_t)buf->bytes_read)
-	{
-		buf->bytes_read = read(fd, buf->buf, BUFFER_SIZE);
-		if (buf->bytes_read <= 0)
-			return (0);
-		buf->index = 0;
-	}
-	prev_start = buf->index;
-	while (buf->index < (size_t)buf->bytes_read && buf->buf[buf->index] != '\n')
-		++buf->index;
-	buf->nl_found = buf->index != (size_t)buf->bytes_read;
-	if (buf->nl_found)
-		++buf->index;
-	return (prev_start);
-}
-
 char	*get_next_line(int fd)
 {
 	static t_buf	buf;
-	size_t			prev_start;
+	size_t			begin;
 	t_dynstr		str;
+	bool			nl_found;
 
 	if (fd < 0)
 		return (NULL);
 	dynstr_init(&str);
-	buf.nl_found = false;
-	while (!buf.nl_found)
+	if (buf.bytes_read == 0 || buf.fd != fd)
 	{
-		prev_start = buf_nl(&buf, fd);
-		if (buf.bytes_read < 0)
-			return (free(str.data), NULL);
-		if (buf.bytes_read == 0)
-			break ;
-		if (buf.index - prev_start + str.len + 1 > str.size)
-			if (!dynstr_ensure_size(&str, buf.index - prev_start + str.len + 1))
-				return (NULL);
-		while (prev_start < buf.index)
-			str.data[str.len++] = buf.buf[prev_start++];
+		buf.fd = fd;
+		buf.index = 0;
+		buf.bytes_read = 0;
 	}
-	if (str.size == 0)
-		return (NULL);
-	str.data[str.len] = '\0';
+	nl_found = false;
+	while (!nl_found)
+	{
+		if (buf.index >= (size_t) buf.bytes_read)
+		{
+			buf.bytes_read = read(buf.fd, buf.buf, BUFFER_SIZE);
+			if (buf.bytes_read < 0)
+				return (free(str.data), NULL);
+			if (buf.bytes_read == 0)
+				break;
+			buf.index = 0;
+		}
+		begin = buf.index;
+		while (buf.index < (size_t)buf.bytes_read && buf.buf[buf.index] != '\n')
+			++buf.index;
+		if (buf.index < (size_t) buf.bytes_read && buf.buf[buf.index] == '\n')
+		{
+			nl_found = true;
+			++buf.index;
+		}
+		if (!dynstr_ensure_size(&str, str.len + (buf.index - begin) + 1))
+			return (free(str.data), NULL);
+		while (begin != buf.index)
+			str.data[str.len++] = buf.buf[begin++];
+		str.data[str.len] = '\0';
+	}
 	return (str.data);
 }
