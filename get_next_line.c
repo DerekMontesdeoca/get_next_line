@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/18 05:33:09 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/18 05:51:04 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,16 +47,24 @@ t_buf_read_result	fill_buffer_if_empty(t_buf *buf)
 	return (BUF_READ_RESULT_OK);
 }
 
+/**
+ * The first call initializes the buffer. 
+ * The other calls reset it to make it usable again if:
+ * 1. A new FD is provided.
+ * 2. The same FD is provided and the last call received the EOF.
+ */
 bool	buf_init(t_buf *buf, int fd)
 {
-	if (BUFFER_SIZE <= 0)
-		return (false);
 	if (fd < 0)
 		return (false);
 	if (buf->buf == NULL)
+	{
+		if (BUFFER_SIZE <= 0)
+			return (false);
 		buf->buf = malloc(BUFFER_SIZE);
-	if (buf->buf == NULL)
-		return (false);
+		if (buf->buf == NULL)
+			return (false);
+	}
 	if (buf->bytes_read == 0 || buf->fd != fd)
 	{
 		buf->fd = fd;
