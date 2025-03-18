@@ -33,6 +33,98 @@ static void test_gnl(const char *text, const char **expected, int size) {
 	close(pip[0]);
 }
 
+static void test_gnl_with_diff_fd(const char *text, const char **expected, int size, int old_fd) {
+	int		pip[2];
+	char	*line;
+
+	line = NULL;
+	if (pipe(pip) < 0)
+		fail_msg("pipe failed: %s", strerror(errno));
+	if (pip[0] == old_fd)
+	{
+		pip[0] = dup(pip[0]);
+		assert_true(pip[0] >= 0);
+		close(old_fd);
+	}
+	write(pip[1], text, strlen(text));
+	close(pip[1]);
+	pip[1] = -1;
+	for (int i = 0; i < size; ++i)
+	{
+		line = get_next_line(pip[0]);
+		assert_non_null(line);
+		assert_memory_equal(line, expected[i], strlen(expected[i]));
+		free(line);
+	}
+	line = get_next_line(pip[0]);
+	assert_null(line);
+	close(pip[0]);
+}
+
+static void test_gnl_not_full(const char *text, const char **expected, int size, int *r_fd) {
+	int		pip[2];
+	char	*line;
+
+	line = NULL;
+	if (pipe(pip) < 0)
+		fail_msg("pipe failed: %s", strerror(errno));
+	*r_fd = pip[0];
+	write(pip[1], text, strlen(text));
+	close(pip[1]);
+	pip[1] = -1;
+	for (int i = 0; i < size; ++i)
+	{
+		line = get_next_line(pip[0]);
+		assert_non_null(line);
+		assert_memory_equal(line, expected[i], strlen(expected[i]));
+		free(line);
+	}
+	close(pip[0]);
+}
+
+
+static void test_2_gnl(const char *text, const char **expected, int size) {
+	int		pip[2];
+	int		pip2[2];
+	char	*line;
+
+	line = NULL;
+	if (pipe(pip) < 0)
+		fail_msg("pipe failed: %s", strerror(errno));
+	if (pipe(pip2) < 0)
+		fail_msg("pipe failed: %s", strerror(errno));
+	write(pip[1], text, strlen(text));
+	close(pip[1]);
+	pip[1] = -1;
+	for (int i = 0; i < size; ++i)
+	{
+		line = get_next_line(pip[0]);
+		assert_non_null(line);
+		assert_memory_equal(line, expected[i], strlen(expected[i]));
+		free(line);
+	}
+	line = get_next_line(pip[0]);
+	assert_null(line);
+
+	dup2(pip2[0], pip[0]);
+	if (pip2[0] != pip[0])
+		close(pip2[0]);
+	write(pip2[1], text, strlen(text));
+	close(pip2[1]);
+	pip2[1] = -1;
+	for (int i = 0; i < size; ++i)
+	{
+		line = get_next_line(pip[0]);
+		assert_non_null(line);
+		assert_memory_equal(line, expected[i], strlen(expected[i]));
+		free(line);
+	}
+	line = get_next_line(pip[0]);
+	assert_null(line);
+	close(pip[0]);
+}
+
+
 static void one_char(void **state)
 {
 	(void)state;
@@ -55,6 +147,12 @@ static void one_char2(void **state)
 {
 	(void)state;
 	test_gnl("h", (const char *[]){"h"}, 1);
+}
+
+static void one_char3(void **state)
+{
+	(void)state;
+	test_gnl("\n", (const char *[]){"\n"}, 1);
 }
 
 static void	one_line(void **state)
@@ -200,15 +298,50 @@ static void giant_lines(void **state)
 	fclose(file);
 }
 
+static void read_2_files_on_same_fd(void **state)
+{
+	(void)state;
+	test_2_gnl("hola\namigo", (const char*[]){"hola", "amigo"}, 2);
+}
+
+static void calling_two_fd_to_end(void **state)
+{
+	(void) state;
+	test_gnl("\n\n\nhahaha", (const char*[]){"\n", "\n", "\n", "hahaha"}, 4);
+	test_gnl("hasta aqui llegamos", (const char*[]){"hasta aqui llegamos"}, 1);
+}
+
+static void change_fd_mid_file(void **state)
+{
+	(void) state;
+	int r_fd;
+	test_gnl_not_full(
+		"life is better with nice people around you\nright?\nRIGHT?\nRIGHTTTTTT\n",
+		(const char *[]){"life is better with nice people around you\n", "right?\n"},
+		2,
+		&r_fd
+	);
+	test_gnl_with_diff_fd(
+		"new safe\nzone\nidentified\n",
+		(const char *[]){"new safe\n", "zone\n", "identified\n"},
+		3,
+		r_fd
+	);
+}
+
 int main(void) {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(one_char),
         cmocka_unit_test(one_char2),
+        cmocka_unit_test(one_char3),
         cmocka_unit_test(one_line),
         cmocka_unit_test(one_and_half_line),
         cmocka_unit_test(two_lines),
         cmocka_unit_test(many_lines),
         cmocka_unit_test(giant_lines),
+        cmocka_unit_test(read_2_files_on_same_fd),
+        cmocka_unit_test(calling_two_fd_to_end),
+        cmocka_unit_test(change_fd_mid_file),
     };
  
     return cmocka_run_group_tests(tests, NULL, NULL);
