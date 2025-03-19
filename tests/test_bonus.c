@@ -11,44 +11,70 @@
 #include <fcntl.h>
 #include "../get_next_line_bonus.h"
 
+/* make CPPFLAGS=-DBUFFER_SIZE=4096 test_bonus && make run_bonus_tests &>/dev/null && diff final2.txt <(awk ' */
+/* BEGIN { */
+/*     found = 1 */
+/*     while (found) { */
+/*         found = 0 */
+/*         if (getline < "mobydick.txt") { */
+/*             found = 1 */
+/*             print */
+/*         } */
+/*         if (getline < "quijote.txt") { */
+/*             found = 1 */
+/*             print */
+/*         } */
+/*         if (getline < "book1.txt") { */
+/*             found = 1 */
+/*             print */
+/*         } */
+/*     } */
+/*     exit */
+/* } */
+/* ') */ 
+
 void only_test(void **state)
 {
 	(void) state;
 
 	int fds[3];
 	char *line;
-	bool done[3] = {0};
-	bool exit;
+	bool found;
+	bool fdone[3] = {0};
 
 	fds[0] = open("mobydick.txt", O_RDONLY);
 	fds[1] = open("quijote.txt", O_RDONLY);
 	fds[2] = open("book1.txt", O_RDONLY);
+	FILE *output = fopen("final2.txt", "w");
 
 	int size = sizeof(fds) / sizeof(int);
 
 	for (int i = 0; i < size; ++i)
+	{
 		if (fds[i] < 0)
 			fail();
-
-	for (int i = 0;; i = (i + 1) % size)
-	{
-		if ((line = get_next_line(fds[i])) == NULL)
-		{
-			done[i] = true;
-			exit = true;
-			for (int j = 0; j < size; ++j)
-				exit &= done[j];
-			if (exit)
-			{
-				for (int j = 0; j < size; ++j)
-					close(fds[j]);
-				return;
-			}
-			continue;
-		}
-		printf("%s", line);
-		free(line);
 	}
+
+	found = true;
+	while (found)
+	{
+		found = false;
+		for (int i = 0; i < size; ++i)
+		{
+			if (!fdone[i])
+			{
+				line = get_next_line(fds[i]);
+				fdone[i] = line == NULL;
+				if (line != NULL)
+				{
+					fprintf(output, "%s", line);
+					found = true;
+					free(line);
+				}
+			}
+		}
+	}
+	fclose(output);
 }
 
 int main(void) {

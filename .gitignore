@@ -1,3 +1,5 @@
 *.out
 *.o
 tests/test
+tests/final2.txt
+tests/test_bonus
