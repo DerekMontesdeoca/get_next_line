@@ -6,12 +6,12 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/18 05:21:25 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/18 05:24:55 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/19 02:18:18 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdlib.h>
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 void	*ft_realloc(void *ptr, size_t old_size, size_t new_size)
 {
