@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/18 05:51:04 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/19 01:18:47 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 bool	append_from_buf_to_line(t_buf *buf, t_dynstr *line)
 {
-	size_t			begin;
+	size_t	begin;
 
 	begin = buf->index;
 	while (buf->index < (size_t)buf->bytes_read && buf->buf[buf->index] != '\n')
@@ -88,7 +88,11 @@ char	*get_next_line(int fd)
 	{
 		buf_read_result = fill_buffer_if_empty(&buf);
 		if (buf_read_result == BUF_READ_RESULT_DONE)
+		{
+			free(buf.buf);
+			buf.buf = NULL;
 			break ;
+		}
 		if (buf_read_result == BUF_READ_RESULT_ERROR)
 			return (free(line.data), NULL);
 		if (!append_from_buf_to_line(&buf, &line))
