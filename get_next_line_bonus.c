@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/19 02:38:44 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/20 04:50:08 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,13 @@ static bool	buf_init(t_buf *buf)
 {
 	if (buf->buf == NULL)
 	{
+		buf->bytes_read = 0;
+		buf->index = 0;
+		buf->nl_found = false;
 		buf->buf = malloc(BUFFER_SIZE);
 		if (buf->buf == NULL)
 			return (false);
 	}
-	if (buf->bytes_read == 0)
-		buf->index = 0;
 	return (true);
 }
 
@@ -82,9 +83,11 @@ char	*get_next_line(int fd)
 			break ;
 		}
 		if (buf_read_result == BUF_READ_RESULT_ERROR)
-			return (free(line.data), NULL);
+		{
+			return (free(line.data), free(bufs[fd].buf), bufs[fd].buf = NULL, NULL);
+		}
 		if (!append_from_buf_to_line(&bufs[fd], &line))
-			return (free(line.data), NULL);
+			return (free(line.data), free(bufs[fd].buf), bufs[fd].buf = NULL, NULL);
 	}
 	return (line.data);
 }
