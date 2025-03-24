@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/20 04:50:08 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/24 01:24:17 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,14 @@ static bool	buf_init(t_buf *buf)
 	return (true);
 }
 
+void	gnl_free(char **buf, char **line)
+{
+	free(*buf);
+	*buf = NULL;
+	free(*line);
+	*line = NULL;
+}
+
 char	*get_next_line(int fd)
 {
 	static t_buf		bufs[1024];
@@ -83,11 +91,9 @@ char	*get_next_line(int fd)
 			break ;
 		}
 		if (buf_read_result == BUF_READ_RESULT_ERROR)
-		{
-			return (free(line.data), free(bufs[fd].buf), bufs[fd].buf = NULL, NULL);
-		}
+			return (gnl_free(&bufs[fd].buf, &line.data), NULL);
 		if (!append_from_buf_to_line(&bufs[fd], &line))
-			return (free(line.data), free(bufs[fd].buf), bufs[fd].buf = NULL, NULL);
+			return (gnl_free(&bufs[fd].buf, &line.data), NULL);
 	}
 	return (line.data);
 }
