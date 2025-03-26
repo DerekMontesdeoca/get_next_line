@@ -6,12 +6,15 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/24 01:24:17 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/03/26 13:30:29 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include "get_next_line_bonus.h"
+
+#define FD_MAX 1024
 
 static bool	append_from_buf_to_line(t_buf *buf, t_dynstr *line)
 {
@@ -71,11 +74,11 @@ void	gnl_free(char **buf, char **line)
 
 char	*get_next_line(int fd)
 {
-	static t_buf		bufs[1024];
+	static t_buf		bufs[FD_MAX];
 	t_dynstr			line;
 	t_buf_read_result	buf_read_result;
 
-	if (fd < 0 || BUFFER_SIZE <= 0)
+	if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0 || BUFFER_SIZE > SIZE_MAX)
 		return (NULL);
 	if (!buf_init(&bufs[fd]))
 		return (NULL);
